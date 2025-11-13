@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+//Autor: Lesly Baltazar Alanoca
 using namespace std;
 struct Notas{
     float EP;
