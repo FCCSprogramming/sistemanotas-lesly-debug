@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <stdlib.h>
+#include <fstream>
 //Autor: Lesly Baltazar Alanoca
 using namespace std;
 struct Notas{
@@ -65,6 +67,9 @@ void generarBoleta(const Estudiante &estudiante);
 void mostrarMejorPromedio(const Estudiante estudiantes[], int cantidad);
 void estudiantesAprobadosCurso(const Estudiante estudiantes[], int cantidad, string codigoCurso);
 void reporteGeneral(const Estudiante estudiantes[], int cantidad);
+
+void guardarEnArchivo(const Estudiante estudiantes[],int cantidad);
+
 int main(){
     int opcion;
     Estudiante estudiantes[50];
@@ -79,7 +84,7 @@ int main(){
         cout<<"3. Ingresar notas de curso"<<endl;
         cout<<"4. Mostrar informacion de estudiante"<<endl;
         cout<<"5. Generar boleta de notas"<<endl;
-        cout<<"6. Mostrar menor promedio"<<endl;
+        cout<<"6. Mostrar mejor promedio"<<endl;
         cout<<"7. Estudiantes aprobados por curso"<<endl;
         cout<<"8. Reporte general"<<endl;
         cout<<"9. Salir"<<endl;
@@ -104,8 +109,8 @@ int main(){
             ingresarNotas(*e);
             }else{
                 cout << "Estudiante no encontrado." << endl;
-                break;
             }
+            break;
             case 4:
                 mostrarEstudiantes(estudiantes,cantidad);
                 break;
@@ -130,6 +135,7 @@ int main(){
                 break;
         }
     }while(opcion!=9);
+    guardarEnArchivo(estudiantes,cantidad);
     return 0;
 }
 void registrarEstudiante(Estudiante estudiantes[],int &cantidad){
@@ -167,10 +173,10 @@ void matricularCurso(Estudiante &student){
      cout<<"\n===Matricula de Cursos==="<<endl;
      cout<<"Ingrese el numero de cursos: ";
      cin>>student.cantidadCursos;
+     cin.ignore();
      for(int i=0;i<student.cantidadCursos;i++){
         cout<<"Codigo: ";
         getline(cin,student.cursos[i].codigo);
-        cin.ignore();
         cout<<"Nombre: ";
         getline(cin,student.cursos[i].nombre);
         cout<<"Creditos: ";
@@ -218,7 +224,13 @@ float calcularPromedioPonderado(const Estudiante &estudiante){
         sumaPonderada+=prom*estudiante.cursos[i].creditos;
         totalCreditos+=estudiante.cursos[i].creditos;
     }
-    return totalCreditos ? (sumaPonderada / totalCreditos) : 0;
+    float promedioPonderado;
+    if(totalCreditos!=0){
+        promedioPonderado=(sumaPonderada/totalCreditos);
+    }else{
+        promedioPonderado=0;
+    }
+    return promedioPonderado;
 }
 int calcularTotalCreditos(const Estudiante &estudiante){
     int total = 0;
@@ -298,4 +310,42 @@ void reporteGeneral(const Estudiante estudiantes[], int cantidad) {
         cout<<"Total de creditos: " << calcularTotalCreditos(estudiantes[i]) << endl;
         cout<<"Estado general: "<<(calcularPromedioPonderado(estudiantes[i])>= 10 ? "Aprobado" : "Desaprobado")<< endl;
     }
+}
+
+void guardarEnArchivo(const Estudiante estudiantes[],int cantidad){
+    fstream archivo("reporte_academico.txt",ios::out);
+    if(archivo.fail()){
+        cout<<"Error al abrir el archivo";
+        exit(1);
+    }
+    archivo<<"\n===REPORTE ACADEMICO==="<<endl;
+    for(int i=0;i<cantidad;i++){
+        archivo<<"______________________________________\n";
+        archivo<<"Codigo: "<<estudiantes[i].cod<<endl,
+        archivo<<"Nombre: "<<estudiantes[i].nomb<<endl;
+        archivo<<"Carrera: "<<estudiantes[i].carrera<<endl,
+        archivo<<"Ciclo: "<<estudiantes[i].ciclo<<endl;
+        archivo<<"Total de creditos: "<<calcularTotalCreditos(estudiantes[i])<<endl;
+        float promedio;
+        promedio=calcularPromedioPonderado(estudiantes[i]);
+        string estado;
+        if(promedio>=10){
+            estado="Aprobado";
+        }else{
+            estado="Desaprobado";
+        }
+        archivo<<"Estado: "<<estado<<endl;
+        archivo<<"===CURSOS MATRICULADOS===";
+        for(int j=0;j<estudiantes[i].cantidadCursos;j++) {
+            archivo<<"      Curso "<<j+1<<endl;
+            archivo<<"      Codigo: "<<estudiantes[i].cursos[j].nombre<< "\n";
+            archivo<<"      Nombre: " <<estudiantes[i].cursos[j].nombre << "\n";
+            archivo<<"      Creditos: "<<estudiantes[i].cursos[j].creditos << "\n";
+            archivo<<"      Profesor: "<<estudiantes[i].cursos[j].profesor << "\n";
+            archivo<<"      Notas -> PP: "<<estudiantes[i].cursos[j].nota.PP<<" EP: "<<estudiantes[i].cursos[j].nota.EP<<" EF: "<<estudiantes[i].cursos[j].nota.EF<<"\n";
+            archivo<<"      Promedio: "<<estudiantes[i].cursos[j].nota.calcularPromedio()<<"\n";
+            archivo<<"      Estado: "<<estudiantes[i].cursos[j].nota.obtenerEstado()<<"\n\n";
+        }
+    }
+    archivo.close();
 }
